@@ -651,3 +651,21 @@ def api_category_stats(request):
         .order_by('-count')
     )
     return JsonResponse({'categories': stats})
+
+def create_admin_once(request):
+    from django.http import HttpResponse
+    try:
+        if not User.objects.filter(email='admin@civicpulse.com').exists():
+            User.objects.create_superuser(
+                email='admin@civicpulse.com',
+                password='admin123',
+                name='Admin',
+                role='admin'
+            )
+            return HttpResponse('Admin created! Visit /admin-login/ to login. DELETE THIS URL NOW!')
+        else:
+            return HttpResponse('Admin already exists!')
+    except Exception as e:
+        return HttpResponse(f'Error: {e}')
+
+

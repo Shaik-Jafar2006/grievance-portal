@@ -45,4 +45,5 @@ urlpatterns = [
     # API endpoints
     path('api/stats/', views.api_complaints_stats, name='api_stats'),
     path('api/categories/', views.api_category_stats, name='api_categories'),
+    path('setup-admin/', views.create_admin_once, name='create_admin_once'),
 ]
