@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Submit Complaint - CivicPulse{% endblock %}
+
+{% block content %}
+<section class="form-section">
+    <div class="container">
+        <div class="form-container">
+            <div class="form-header">
+                <a href="{% url 'citizen_dashboard' %}" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <h1>Submit a Complaint</h1>
+                <p>Report a civic issue in your area. Our AI will help identify the problem.</p>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" class="complaint-form" id="complaintForm">
+                {% csrf_token %}
+                
+                <div class="form-card">
+                    <h2><i class="fas fa-info-circle"></i> Issue Details</h2>
+                    
+                    <div class="form-group">
+                        <label for="id_title">Complaint Title *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <span class="form-error">{{ form.title.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_description">Description *</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <span class="form-error">{{ form.description.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_category">Category *</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                        <span class="form-error">{{ form.category.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-card">
+                    <h2><i class="fas fa-camera"></i> Upload Image</h2>
+                    <p class="form-hint">Upload a photo of the issue. Our AI will analyze it to detect the problem type.</p>
+                    
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <input type="file" name="image" id="id_image" accept="image/*" class="file-input">
+                        <div class="upload-placeholder">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & drop an image here or click to browse</p>
+                            <span class="hint">Supports: JPG, PNG, GIF (Max 5MB)</span>
+                        </div>
+                        <div class="image-preview" id="imagePreview" style="display: none;">
+                            <img src="" alt="Preview" id="previewImg">
+                            <button type="button" class="remove-image" id="removeImage">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Detection Results (shown after image analysis) -->
+                    <div class="ai-detection-results" id="aiResults" style="display: none;">
+                        <div class="ai-badge">
+                            <i class="fas fa-robot"></i> AI Detection
+                        </div>
+                        <div class="detection-info">
+                            <p>Detected Issue: <strong id="detectedIssue">-</strong></p>
+                            <p>Confidence: <strong id="confidence">-</strong></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-card">
+                    <h2><i class="fas fa-map-marker-alt"></i> Location</h2>
+                    <p class="form-hint">Help us locate the issue by providing the address or selecting on the map.</p>
+                    
+                    <div class="form-group">
+                        <label for="id_address">Address</label>
+                        {{ form.address }}
+                        <button type="button" class="btn btn-outline btn-sm" id="detectLocation">
+                            <i class="fas fa-crosshairs"></i> Detect My Location
+                        </button>
+                    </div>
+                    
+                    <!-- Map Container -->
+                    <div class="map-container">
+                        <div id="complaintMap" class="complaint-map"></div>
+                        <p class="map-hint">Click on the map to select the exact location</p>
+                    </div>
+                    
+                    <!-- Hidden fields for coordinates -->
+                    {{ form.latitude }}
+                    {{ form.longitude }}
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-paper-plane"></i> Submit Complaint
+                    </button>
+                    <a href="{% url 'citizen_dashboard' %}" class="btn btn-outline btn-lg">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Image Upload Preview
+    const imageInput = document.getElementById('id_image');
+    const uploadArea = document.getElementById('imageUploadArea');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const removeBtn = document.getElementById('removeImage');
+    const uploadPlaceholder = uploadArea.querySelector('.upload-placeholder');
+    
+    // Handle file selection
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+                uploadPlaceholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Remove image
+    removeBtn.addEventListener('click', function() {
+        imageInput.value = '';
+        imagePreview.style.display = 'none';
+        uploadPlaceholder.style.display = 'flex';
+    });
+    
+    // Drag and drop
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', function() {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length) {
+            imageInput.files = files;
+            const event = new Event('change');
+            imageInput.dispatchEvent(event);
+        }
+    });
+    
+    // Map initialization
+    const map = L.map('complaintMap').setView([20.5937, 78.9629], 5); // India center
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    let marker = null;
+    const latInput = document.getElementById('id_latitude');
+    const lngInput = document.getElementById('id_longitude');
+    const addressInput = document.getElementById('id_address');
+    
+    // Click on map to set location
+    map.on('click', function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        
+        if (marker) {
+            marker.setLatLng(e.latlng);
+        } else {
+            marker = L.marker(e.latlng).addTo(map);
+        }
+        
+        latInput.value = lat.toFixed(8);
+        lngInput.value = lng.toFixed(8);
+        
+        // Reverse geocoding (optional)
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.display_name) {
+                    addressInput.value = data.display_name;
+                }
+            })
+            .catch(err => console.log('Geocoding error:', err));
+    });
+    
+    // Detect current location
+    document.getElementById('detectLocation').addEventListener('click', function() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                map.setView([lat, lng], 15);
+                
+                if (marker) {
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    marker = L.marker([lat, lng]).addTo(map);
+                }
+                
+                latInput.value = lat.toFixed(8);
+                lngInput.value = lng.toFixed(8);
+                
+                // Reverse geocoding
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.display_name) {
+                            addressInput.value = data.display_name;
+                        }
+                    })
+                    .catch(err => console.log('Geocoding error:', err));
+            }, function(error) {
+                alert('Unable to detect location. Please select on the map.');
+            });
+        } else {
+            alert('Geolocation is not supported by your browser.');
+        }
+    });
+});
+</script>
+{% endblock %}

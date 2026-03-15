@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assign Officer - CivicPulse{% endblock %}
+
+{% block content %}
+<section class="form-section">
+    <div class="container">
+        <div class="form-container form-container-sm">
+            <div class="form-header">
+                <a href="{% url 'all_complaints' %}" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to All Complaints
+                </a>
+                <h1>Assign Officer</h1>
+                <p>Assign an officer to handle this complaint</p>
+            </div>
+            
+            <!-- Complaint Summary -->
+            <div class="complaint-summary-card">
+                <div class="summary-header">
+                    <code>{{ complaint.complaint_id }}</code>
+                    <span class="status-badge status-{{ complaint.status }}">
+                        {{ complaint.get_status_display }}
+                    </span>
+                </div>
+                <h2>{{ complaint.title }}</h2>
+                <p>{{ complaint.description|truncatewords:30 }}</p>
+                
+                <div class="summary-meta">
+                    <span><i class="fas fa-user"></i> {{ complaint.citizen.name }}</span>
+                    <span><i class="fas fa-tag"></i> {{ complaint.get_category_display }}</span>
+                    <span><i class="fas fa-calendar"></i> {{ complaint.created_at|date:"M d, Y" }}</span>
+                </div>
+                
+                {% if complaint.assigned_officer %}
+                <div class="current-assignment">
+                    <p><strong>Currently Assigned To:</strong> {{ complaint.assigned_officer.name }}</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Assignment Form -->
+            <form method="post" class="assign-form">
+                {% csrf_token %}
+                
+                <div class="form-card">
+                    <h2><i class="fas fa-user-plus"></i> Select Officer</h2>
+                    
+                    <div class="form-group">
+                        <label for="id_assigned_officer">Officer *</label>
+                        {{ form.assigned_officer }}
+                        {% if form.assigned_officer.errors %}
+                        <span class="form-error">{{ form.assigned_officer.errors.0 }}</span>
+                        {% endif %}
+                        <p class="form-hint">Select an officer to handle this complaint</p>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-check"></i> Assign Officer
+                    </button>
+                    <a href="{% url 'all_complaints' %}" class="btn btn-outline btn-lg">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

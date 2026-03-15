@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}CivicPulse - Citizen Grievance Management Portal{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                Smart Grievance Management
+                <span class="text-accent">Powered by AI</span>
+            </h1>
+            <p class="hero-subtitle">
+                Report civic issues, track resolutions, and help build a better community. 
+                Our AI-powered system ensures quick identification and efficient resolution of your concerns.
+            </p>
+            <div class="hero-actions">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'submit_complaint' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus-circle"></i> Report Issue
+                    </a>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline btn-lg">
+                        <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                    </a>
+                {% else %}
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus-circle"></i> Report Issue
+                    </a>
+                    <a href="{% url 'officer_login' %}" class="btn btn-outline btn-lg" style="border-color: white; color: white;">
+                        <i class="fas fa-user-shield"></i> Officer Login
+                    </a>
+                    <a href="{% url 'admin_login' %}" class="btn btn-outline btn-lg" style="border-color: white; color: purple;">
+                        <i class="fas fa-user-cog"></i> Admin Login
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="hero-image">
+            <div class="hero-illustration">
+                <i class="fas fa-city"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="stat-number" data-count="{{ stats.total_complaints }}">{{ stats.total_complaints }}</div>
+                <div class="stat-label">Total Complaints</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon resolved">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-number" data-count="{{ stats.resolved }}">{{ stats.resolved }}</div>
+                <div class="stat-label">Resolved</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon progress">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <div class="stat-number" data-count="{{ stats.in_progress }}">{{ stats.in_progress }}</div>
+                <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon pending">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-number" data-count="{{ stats.pending }}">{{ stats.pending }}</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>How It Works</h2>
+            <p>Simple steps to report and resolve civic issues</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <h3>Report Issue</h3>
+                <p>Submit your complaint with photos and location details. Our AI automatically identifies the issue type.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3>AI Detection</h3>
+                <p>Our intelligent system analyzes uploaded images to detect and categorize issues like potholes, garbage, and more.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <h3>Officer Assignment</h3>
+                <p>Complaints are automatically routed to the appropriate department and assigned to officers.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <h3>Real-time Updates</h3>
+                <p>Track your complaint status in real-time and receive notifications at every step.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="categories-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Report Categories</h2>
+            <p>We handle various civic issues</p>
+        </div>
+        <div class="categories-grid">
+            <div class="category-card">
+                <i class="fas fa-road"></i>
+                <span>Road Damage</span>
+            </div>
+            <div class="category-card">
+                <i class="fas fa-trash"></i>
+                <span>Garbage</span>
+            </div>
+            <div class="category-card">
+                <i class="fas fa-tint"></i>
+                <span>Water Leakage</span>
+            </div>
+            <div class="category-card">
+                <i class="fas fa-bolt"></i>
+                <span>Electricity</span>
+            </div>
+            <div class="category-card">
+                <i class="fas fa-lightbulb"></i>
+                <span>Streetlight</span>
+            </div>
+            <div class="category-card">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Other Issues</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Ready to Make a Difference?</h2>
+            <p>Join thousands of citizens who are helping improve their communities</p>
+            {% if not user.is_authenticated %}
+            <a href="{% url 'register' %}" class="btn btn-white btn-lg">
+                <i class="fas fa-user-plus"></i> Get Started Now
+            </a>
+            {% else %}
+            <a href="{% url 'submit_complaint' %}" class="btn btn-white btn-lg">
+                <i class="fas fa-plus-circle"></i> Submit a Complaint
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

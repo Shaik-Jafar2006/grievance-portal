@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Track Complaint - CivicPulse{% endblock %}
+
+{% block content %}
+<section class="track-section">
+    <div class="container">
+        <div class="track-container">
+            <div class="track-header">
+                <h1><i class="fas fa-search"></i> Track Your Complaint</h1>
+                <p>Enter your complaint ID to check the current status</p>
+            </div>
+            
+            <form method="post" class="track-form">
+                {% csrf_token %}
+                <div class="search-box">
+                    {{ form.complaint_id }}
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Track
+                    </button>
+                </div>
+                <p class="hint">Example: GRV-20240101-ABC123</p>
+            </form>
+            
+            {% if complaint %}
+            <div class="track-result">
+                <div class="result-card">
+                    <div class="result-header">
+                        <div>
+                            <code class="complaint-id">{{ complaint.complaint_id }}</code>
+                            <h2>{{ complaint.title }}</h2>
+                        </div>
+                        <span class="status-badge status-{{ complaint.status }} status-large">
+                            {{ complaint.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="result-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="label">Category</span>
+                                <span class="value category-badge">{{ complaint.get_category_display }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Submitted On</span>
+                                <span class="value">{{ complaint.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Last Updated</span>
+                                <span class="value">{{ complaint.updated_at|date:"M d, Y" }}</span>
+                            </div>
+                            {% if complaint.assigned_officer %}
+                            <div class="info-item">
+                                <span class="label">Assigned Officer</span>
+                                <span class="value">{{ complaint.assigned_officer.name }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="description-section">
+                            <h3>Description</h3>
+                            <p>{{ complaint.description }}</p>
+                        </div>
+                        
+                        {% if complaint.officer_remarks %}
+                        <div class="remarks-section">
+                            <h3>Officer Remarks</h3>
+                            <p>{{ complaint.officer_remarks }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Status Progress -->
+                        <div class="status-progress">
+                            <h3>Progress</h3>
+                            <div class="progress-steps">
+                                <div class="progress-step {% if complaint.status in 'submitted,under_review,assigned,in_progress,resolved' %}completed{% endif %}">
+                                    <div class="step-marker"><i class="fas fa-check"></i></div>
+                                    <span>Submitted</span>
+                                </div>
+                                <div class="progress-step {% if complaint.status in 'under_review,assigned,in_progress,resolved' %}completed{% endif %}">
+                                    <div class="step-marker"><i class="fas fa-check"></i></div>
+                                    <span>Under Review</span>
+                                </div>
+                                <div class="progress-step {% if complaint.status in 'assigned,in_progress,resolved' %}completed{% endif %}">
+                                    <div class="step-marker"><i class="fas fa-check"></i></div>
+                                    <span>Assigned</span>
+                                </div>
+                                <div class="progress-step {% if complaint.status in 'in_progress,resolved' %}completed{% endif %}">
+                                    <div class="step-marker"><i class="fas fa-check"></i></div>
+                                    <span>In Progress</span>
+                                </div>
+                                <div class="progress-step {% if complaint.status == 'resolved' %}completed{% endif %}">
+                                    <div class="step-marker"><i class="fas fa-check"></i></div>
+                                    <span>Resolved</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

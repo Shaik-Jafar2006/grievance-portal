@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ complaint.complaint_id }} - CivicPulse{% endblock %}
+
+{% block content %}
+<section class="detail-section">
+    <div class="container">
+        <div class="detail-header">
+            <a href="{% url 'dashboard' %}" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <div class="header-content">
+                <div class="header-info">
+                    <code class="complaint-id-large">{{ complaint.complaint_id }}</code>
+                    <h1>{{ complaint.title }}</h1>
+                </div>
+                <span class="status-badge status-{{ complaint.status }} status-large">
+                    {{ complaint.get_status_display }}
+                </span>
+            </div>
+        </div>
+        
+        <div class="detail-grid">
+            <!-- Main Content -->
+            <div class="detail-main">
+                <!-- Description Card -->
+                <div class="detail-card">
+                    <h2><i class="fas fa-info-circle"></i> Description</h2>
+                    <p class="description-text">{{ complaint.description }}</p>
+                </div>
+                
+                <!-- Image Card -->
+                {% if complaint.image %}
+                <div class="detail-card">
+                    <h2><i class="fas fa-image"></i> Uploaded Image</h2>
+                    <div class="complaint-image-large">
+                        <img src="{{ complaint.image.url }}" alt="Complaint Image" id="complaintImage">
+                    </div>
+                    
+                    {% if complaint.ai_detected_issue %}
+                    <div class="ai-detection-box">
+                        <div class="ai-badge">
+                            <i class="fas fa-robot"></i> AI Detection
+                        </div>
+                        <div class="detection-details">
+                            <p><strong>Detected Issue:</strong> {{ complaint.ai_detected_issue }}</p>
+                            <p><strong>Confidence:</strong> {{ complaint.ai_confidence }}%</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <!-- Location Card -->
+                {% if complaint.latitude and complaint.longitude %}
+                <div class="detail-card">
+                    <h2><i class="fas fa-map-marker-alt"></i> Location</h2>
+                    {% if complaint.address %}
+                    <p class="address-text"><i class="fas fa-map-pin"></i> {{ complaint.address }}</p>
+                    {% endif %}
+                    <div id="detailMap" class="detail-map"></div>
+                </div>
+                {% endif %}
+                
+                <!-- Officer Remarks -->
+                {% if complaint.officer_remarks %}
+                <div class="detail-card">
+                    <h2><i class="fas fa-comment-alt"></i> Officer Remarks</h2>
+                    <p class="remarks-text">{{ complaint.officer_remarks }}</p>
+                    {% if complaint.assigned_officer %}
+                    <p class="officer-name">
+                        <i class="fas fa-user-tie"></i> {{ complaint.assigned_officer.name }}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <!-- Feedback Section -->
+                {% if complaint.status == 'resolved' %}
+                <div class="detail-card">
+                    <h2><i class="fas fa-star"></i> Feedback</h2>
+                    {% if has_feedback %}
+                    <div class="feedback-display">
+                        <div class="rating-stars">
+                            {% for i in "12345" %}
+                            <i class="fas fa-star {% if forloop.counter <= complaint.feedback.rating %}active{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                        {% if complaint.feedback.comment %}
+                        <p class="feedback-comment">"{{ complaint.feedback.comment }}"</p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p>This complaint has been resolved. Please share your feedback.</p>
+                    <a href="{% url 'submit_feedback' complaint.complaint_id %}" class="btn btn-primary">
+                        <i class="fas fa-star"></i> Submit Feedback
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="detail-sidebar">
+                <!-- Info Card -->
+                <div class="sidebar-card">
+                    <h3>Complaint Info</h3>
+                    <ul class="info-list">
+                        <li>
+                            <span class="label">Category</span>
+                            <span class="value">
+                                <span class="category-badge">{{ complaint.get_category_display }}</span>
+                            </span>
+                        </li>
+                        <li>
+                            <span class="label">Submitted On</span>
+                            <span class="value">{{ complaint.created_at|date:"M d, Y - h:i A" }}</span>
+                        </li>
+                        <li>
+                            <span class="label">Last Updated</span>
+                            <span class="value">{{ complaint.updated_at|date:"M d, Y - h:i A" }}</span>
+                        </li>
+                        {% if complaint.resolved_at %}
+                        <li>
+                            <span class="label">Resolved On</span>
+                            <span class="value">{{ complaint.resolved_at|date:"M d, Y - h:i A" }}</span>
+                        </li>
+                        {% endif %}
+                        {% if complaint.assigned_officer %}
+                        <li>
+                            <span class="label">Assigned Officer</span>
+                            <span class="value">{{ complaint.assigned_officer.name }}</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <!-- Status Timeline -->
+                <div class="sidebar-card">
+                    <h3>Status Timeline</h3>
+                    <div class="timeline">
+                        {% for history in status_history %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <span class="status-badge status-{{ history.new_status }}">
+                                    {{ history.new_status|title }}
+                                </span>
+                                <span class="timeline-date">{{ history.created_at|date:"M d, Y - h:i A" }}</span>
+                                {% if history.remarks %}
+                                <p class="timeline-remarks">{{ history.remarks }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <span class="status-badge status-submitted">Submitted</span>
+                                <span class="timeline-date">{{ complaint.created_at|date:"M d, Y - h:i A" }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                {% if user.is_officer and complaint.assigned_officer == user %}
+                <div class="sidebar-card">
+                    <h3>Officer Actions</h3>
+                    <a href="{% url 'update_complaint_status' complaint.complaint_id %}" class="btn btn-primary btn-block">
+                        <i class="fas fa-edit"></i> Update Status
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if user.is_admin_user %}
+                <div class="sidebar-card">
+                    <h3>Admin Actions</h3>
+                    <a href="{% url 'assign_officer' complaint.complaint_id %}" class="btn btn-primary btn-block">
+                        <i class="fas fa-user-plus"></i> Assign Officer
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if complaint.latitude and complaint.longitude %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lat = {{ complaint.latitude }};
+    const lng = {{ complaint.longitude }};
+    
+    const map = L.map('detailMap').setView([lat, lng], 15);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    L.marker([lat, lng]).addTo(map)
+        .bindPopup('{{ complaint.title }}')
+        .openPopup();
+});
+</script>
+{% endif %}
+{% endblock %}

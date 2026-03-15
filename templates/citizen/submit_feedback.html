@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Submit Feedback - CivicPulse{% endblock %}
+
+{% block content %}
+<section class="form-section">
+    <div class="container">
+        <div class="form-container form-container-sm">
+            <div class="form-header">
+                <a href="{% url 'complaint_detail' complaint.complaint_id %}" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Complaint
+                </a>
+                <h1>Submit Feedback</h1>
+                <p>Share your experience with the resolution of your complaint</p>
+            </div>
+            
+            <div class="complaint-summary">
+                <code>{{ complaint.complaint_id }}</code>
+                <h3>{{ complaint.title }}</h3>
+                <span class="status-badge status-resolved">Resolved</span>
+            </div>
+            
+            <form method="post" class="feedback-form">
+                {% csrf_token %}
+                
+                <div class="form-card">
+                    <h2><i class="fas fa-star"></i> Rate Your Experience</h2>
+                    
+                    <div class="rating-selector">
+                        {% for choice in form.rating.field.choices %}
+                        <label class="rating-option">
+                            <input type="radio" name="rating" value="{{ choice.0 }}" {% if form.rating.value == choice.0|stringformat:"d" %}checked{% endif %}>
+                            <div class="rating-stars">
+                                {% for i in "12345" %}
+                                <i class="fas fa-star {% if forloop.counter <= choice.0 %}active{% endif %}"></i>
+                                {% endfor %}
+                            </div>
+                            <span class="rating-label">{{ choice.1 }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% if form.rating.errors %}
+                    <span class="form-error">{{ form.rating.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-card">
+                    <h2><i class="fas fa-comment"></i> Additional Comments</h2>
+                    
+                    <div class="form-group">
+                        <label for="id_comment">Your Comments (Optional)</label>
+                        {{ form.comment }}
+                        {% if form.comment.errors %}
+                        <span class="form-error">{{ form.comment.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-paper-plane"></i> Submit Feedback
+                    </button>
+                    <a href="{% url 'complaint_detail' complaint.complaint_id %}" class="btn btn-outline btn-lg">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.rating-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.rating-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.rating-option:hover {
+    border-color: var(--primary-color);
+    background-color: var(--bg-hover);
+}
+
+.rating-option input {
+    display: none;
+}
+
+.rating-option input:checked + .rating-stars + .rating-label {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.rating-option input:checked ~ .rating-stars .fa-star.active {
+    color: #f1c40f;
+}
+
+.rating-option:has(input:checked) {
+    border-color: var(--primary-color);
+    background-color: var(--primary-light);
+}
+
+.rating-stars {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.rating-stars .fa-star {
+    color: #ddd;
+    font-size: 1.25rem;
+}
+
+.rating-stars .fa-star.active {
+    color: #f1c40f;
+}
+
+.complaint-summary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border-radius: 0.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.complaint-summary code {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.complaint-summary h3 {
+    margin: 0;
+}
+</style>
+{% endblock %}

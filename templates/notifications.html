@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications - CivicPulse{% endblock %}
+
+{% block content %}
+<section class="notifications-section">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <a href="{% url 'dashboard' %}" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <h1>Notifications</h1>
+                <p>Stay updated on your complaint status</p>
+            </div>
+        </div>
+        
+        {% if page_obj %}
+        <div class="notifications-list">
+            {% for notification in page_obj %}
+            <div class="notification-card {% if not notification.is_read %}unread{% endif %}">
+                <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="notification-content">
+                    <h3>{{ notification.title }}</h3>
+                    <p>{{ notification.message }}</p>
+                    <div class="notification-meta">
+                        <span class="date">
+                            <i class="fas fa-clock"></i> {{ notification.created_at|timesince }} ago
+                        </span>
+                        {% if notification.complaint %}
+                        <a href="{% url 'complaint_detail' notification.complaint.complaint_id %}" class="complaint-link">
+                            <i class="fas fa-external-link-alt"></i> View Complaint
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if not notification.is_read %}
+                <button class="mark-read-btn" data-id="{{ notification.id }}" onclick="markAsRead(this)">
+                    <i class="fas fa-check"></i>
+                </button>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="page-link">
+                <i class="fas fa-chevron-left"></i> Previous
+            </a>
+            {% endif %}
+            
+            <span class="page-info">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="page-link">
+                Next <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-bell-slash"></i>
+            <h3>No notifications</h3>
+            <p>You don't have any notifications yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markAsRead(btn) {
+    const notificationId = btn.dataset.id;
+    
+    fetch('{% url "notifications" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: `notification_id=${notificationId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const card = btn.closest('.notification-card');
+            card.classList.remove('unread');
+            btn.remove();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

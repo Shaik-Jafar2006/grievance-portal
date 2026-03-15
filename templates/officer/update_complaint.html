@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Update Complaint - CivicPulse{% endblock %}
+
+{% block content %}
+<section class="form-section">
+    <div class="container">
+        <div class="form-container">
+            <div class="form-header">
+                <a href="{% url 'assigned_complaints' %}" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Assigned Complaints
+                </a>
+                <h1>Update Complaint Status</h1>
+                <p>Review and update the complaint status</p>
+            </div>
+            
+            <!-- Complaint Summary -->
+            <div class="complaint-summary-card">
+                <div class="summary-header">
+                    <code>{{ complaint.complaint_id }}</code>
+                    <span class="status-badge status-{{ complaint.status }}">
+                        {{ complaint.get_status_display }}
+                    </span>
+                </div>
+                <h2>{{ complaint.title }}</h2>
+                <p>{{ complaint.description }}</p>
+                
+                <div class="summary-meta">
+                    <span><i class="fas fa-user"></i> {{ complaint.citizen.name }}</span>
+                    <span><i class="fas fa-tag"></i> {{ complaint.get_category_display }}</span>
+                    <span><i class="fas fa-calendar"></i> {{ complaint.created_at|date:"M d, Y" }}</span>
+                </div>
+                
+                {% if complaint.image %}
+                <div class="summary-image">
+                    <img src="{{ complaint.image.url }}" alt="Complaint Image">
+                    {% if complaint.ai_detected_issue %}
+                    <div class="ai-detection-info">
+                        <i class="fas fa-robot"></i>
+                        <span>AI Detected: {{ complaint.ai_detected_issue }} ({{ complaint.ai_confidence }}%)</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if complaint.latitude and complaint.longitude %}
+                <div class="summary-location">
+                    <h3><i class="fas fa-map-marker-alt"></i> Location</h3>
+                    {% if complaint.address %}
+                    <p>{{ complaint.address }}</p>
+                    {% endif %}
+                    <div id="summaryMap" class="summary-map"></div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Update Form -->
+            <form method="post" class="update-form">
+                {% csrf_token %}
+                
+                <div class="form-card">
+                    <h2><i class="fas fa-edit"></i> Update Status</h2>
+                    
+                    <div class="form-group">
+                        <label for="id_status">Status *</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                        <span class="form-error">{{ form.status.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_officer_remarks">Remarks / Notes</label>
+                        {{ form.officer_remarks }}
+                        <p class="form-hint">Add notes about the actions taken or current status</p>
+                        {% if form.officer_remarks.errors %}
+                        <span class="form-error">{{ form.officer_remarks.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save"></i> Update Complaint
+                    </button>
+                    <a href="{% url 'assigned_complaints' %}" class="btn btn-outline btn-lg">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if complaint.latitude and complaint.longitude %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lat = {{ complaint.latitude }};
+    const lng = {{ complaint.longitude }};
+    
+    const map = L.map('summaryMap').setView([lat, lng], 15);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    L.marker([lat, lng]).addTo(map);
+});
+</script>
+{% endif %}
+{% endblock %}

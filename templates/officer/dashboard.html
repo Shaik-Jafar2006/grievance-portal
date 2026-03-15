@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Officer Dashboard - CivicPulse{% endblock %}
+
+{% block content %}
+<section class="dashboard-section">
+    <div class="container">
+        <div class="dashboard-header">
+            <div class="welcome-message">
+                <h1>Officer Dashboard</h1>
+                <p>Welcome back, {{ user.name }}! Manage assigned complaints</p>
+            </div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-icon total">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.total_assigned }}</div>
+                    <div class="stat-label">Total Assigned</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon pending">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.pending }}</div>
+                    <div class="stat-label">Pending Review</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon progress">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.in_progress }}</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon resolved">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.resolved }}</div>
+                    <div class="stat-label">Resolved</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h2>Quick Actions</h2>
+            <div class="actions-grid">
+                <a href="{% url 'assigned_complaints' %}" class="action-card">
+                    <i class="fas fa-list"></i>
+                    <span>All Assigned</span>
+                </a>
+                <a href="{% url 'assigned_complaints' %}?status=assigned" class="action-card">
+                    <i class="fas fa-inbox"></i>
+                    <span>New Assignments</span>
+                </a>
+                <a href="{% url 'assigned_complaints' %}?status=in_progress" class="action-card">
+                    <i class="fas fa-tasks"></i>
+                    <span>In Progress</span>
+                </a>
+                <a href="{% url 'profile' %}" class="action-card">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Profile Settings</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Active Complaints -->
+        <div class="recent-section">
+            <div class="section-header">
+                <h2>Active Complaints</h2>
+                <a href="{% url 'assigned_complaints' %}" class="btn btn-outline btn-sm">View All</a>
+            </div>
+            
+            {% if recent_complaints %}
+            <div class="complaints-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Complaint ID</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Citizen</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for complaint in recent_complaints %}
+                        <tr>
+                            <td><code>{{ complaint.complaint_id }}</code></td>
+                            <td>{{ complaint.title|truncatewords:5 }}</td>
+                            <td>
+                                <span class="category-badge">{{ complaint.get_category_display }}</span>
+                            </td>
+                            <td>{{ complaint.citizen.name }}</td>
+                            <td>{{ complaint.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="status-badge status-{{ complaint.status }}">
+                                    {{ complaint.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'update_complaint_status' complaint.complaint_id %}" class="btn btn-sm btn-primary">
+                                    Update
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-clipboard-check"></i>
+                <h3>No active complaints</h3>
+                <p>All your assigned complaints have been resolved!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

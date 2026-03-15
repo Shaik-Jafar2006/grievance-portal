@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - CivicPulse{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="container">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="auth-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h1>Create Account</h1>
+                    <p>Join us to report and track civic issues</p>
+                </div>
+                
+                <form method="post" class="auth-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="id_name">
+                            <i class="fas fa-user"></i> Full Name
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <span class="form-error">{{ form.name.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_email">
+                            <i class="fas fa-envelope"></i> Email Address
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <span class="form-error">{{ form.email.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_phone">
+                            <i class="fas fa-phone"></i> Phone Number
+                        </label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <span class="form-error">{{ form.phone.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="id_password1">
+                                <i class="fas fa-lock"></i> Password
+                            </label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}
+                            <span class="form-error">{{ form.password1.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_password2">
+                                <i class="fas fa-lock"></i> Confirm Password
+                            </label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}
+                            <span class="form-error">{{ form.password2.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                    <div class="form-errors">
+                        {% for error in form.non_field_errors %}
+                        <p class="form-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="{% url 'login' %}">Sign in here</a></p>
+                </div>
+            </div>
+            
+            <div class="auth-info">
+                <h2>CivicPulse</h2>
+                <p>Citizen Grievance Management Portal</p>
+                <ul class="auth-features">
+                    <li><i class="fas fa-check"></i> Report civic issues easily</li>
+                    <li><i class="fas fa-check"></i> AI-powered issue detection</li>
+                    <li><i class="fas fa-check"></i> Track complaint status in real-time</li>
+                    <li><i class="fas fa-check"></i> Get notifications on updates</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
